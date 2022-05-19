@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: dev
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+encryptAESKey: 9999999999999999999999
