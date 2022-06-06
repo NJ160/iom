@@ -59,6 +59,7 @@ public class ShiroConfig {
         //登录页无需过滤
         filterChainMap.put("/sys/login","anon");
         filterChainMap.put("/sys/login/cpuInfo","anon");
+        filterChainMap.put("/monitor/websockt","anon");
         filterChainMap.put("/swagger-ui/**","anon");
         filterChainMap.put("/webjars/***","anon");
         filterChainMap.put("/doc.html","anon");

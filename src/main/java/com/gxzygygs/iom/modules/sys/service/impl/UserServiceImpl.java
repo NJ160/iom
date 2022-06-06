@@ -15,10 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -49,13 +52,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public boolean checkIfAccountExist(User user) {
         User userPo = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getAccount, user.getAccount()).last("LIMIT 1"));
-        if(userPo == null){
+        if(userPo != null){
             throw new AccountException("用户{"+ user.getAccount() +"}已存在");
         }
         return true;
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public User userRegister(User user, List<Integer> roleIds) throws AccountException {
 
         //判断用户账户是否已存在
@@ -92,19 +96,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public boolean userInfoUpdate(User user) throws AccountException {
+        //查询服务器内数据
+        User userPo = userSummaryInfo(user);
+        if(userPo==null){
+            throw new AccountException("更新用户"+user.getAccount()+"失败,用户不存在");
+        }
+
         if(StringUtils.isBlank(user.getPassword())){
             user.setPassword(null);
         }else{
             user.setPassword(AesCipherUtil.enCrypto(user.getAccount()));
         }
-        //查询服务器内数据
-        User userPo = userSummaryInfo(user);
+
         //通过ID修改信息
         int i = userMapper.update(null,new LambdaUpdateWrapper<User>().set(StringUtils.isNotBlank(user.getPassword()),User::getPassword,user.getPassword())
                                                             .set(StringUtils.isNotBlank(user.getEmail()),User::getEmail,user.getEmail())
                                                             .set(StringUtils.isNotBlank(user.getTelephone()),User::getTelephone,user.getTelephone())
                                                             .set(StringUtils.isNotBlank(user.getUsername()),User::getUsername,user.getUsername())
+                                                            //设置Account防止用户传了一个空的东西导致sql没有set
+                                                            .set(StringUtils.isNotBlank(user.getAccount()),User::getAccount,user.getAccount())
                                                             .eq(userPo.getId()!=null,User::getId,userPo.getId()));
         log.info("用户:"+user.getAccount()+"基础资料更新{"+i+"}条数据");
         if(i == 0){
@@ -114,10 +126,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
     public boolean userDelete(User user) throws AccountException {
         //查询服务器内数据
         User userPo = userSummaryInfo(user);
-        int i = userMapper.deleteById(user);
+        if(userPo==null){
+            throw new AccountException("删除用户"+user.getAccount()+"失败,用户不存在");
+        }
+
+        //获得删除用户下的所有角色
+        List<Integer> roleIds = roleService.listRolesByUser(userPo).stream().map(Role::getId).collect(Collectors.toList());
+        //在用户角色表下删除所有相关关系
+        roleService.deleteRolesForUser(userPo,roleIds);
+
+        int i = userMapper.deleteById(userPo);
         if(i == 0){
             throw new AccountException("删除用户"+user.getAccount()+"数据失败");
         }

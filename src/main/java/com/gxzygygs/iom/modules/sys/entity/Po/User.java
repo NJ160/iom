@@ -9,6 +9,7 @@ import java.util.Date;
 import com.gxzygygs.iom.common.strategy.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -22,6 +23,7 @@ import javax.validation.constraints.Pattern;
  * @since 2022-03-25
  */
 @ApiModel(value = "User对象", description = "用户表")
+@Data
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -58,66 +60,4 @@ public class User implements Serializable {
     @ApiModelProperty("手机")
     private String telephone;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-    public String getAccount() {
-        return account;
-    }
-
-    public void setAccount(String account) {
-        this.account = account;
-    }
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    public Date getRegTime() {
-        return regTime;
-    }
-
-    public void setRegTime(Date regTime) {
-        this.regTime = regTime;
-    }
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    public String getTelephone() {
-        return telephone;
-    }
-
-    public void setTelephone(String telephone) {
-        this.telephone = telephone;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", account=" + account +
-                ", password=" + password +
-                ", username=" + username +
-                ", regTime=" + regTime +
-                ", email=" + email +
-                ", telephone=" + telephone +
-                "}";
-    }
 }

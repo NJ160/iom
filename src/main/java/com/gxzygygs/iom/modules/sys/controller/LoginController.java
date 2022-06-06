@@ -2,6 +2,7 @@ package com.gxzygygs.iom.modules.sys.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.gxzygygs.iom.common.strategy.Auth;
+import com.gxzygygs.iom.modules.monitor.websocket.SimpleServer;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
 import com.gxzygygs.iom.response.Result;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
+import org.java_websocket.server.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
@@ -69,7 +71,6 @@ public class LoginController extends AbstractController{
                 return Result.error(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
             }
         }
-
         return Result.ok("登录成功");
     }
 

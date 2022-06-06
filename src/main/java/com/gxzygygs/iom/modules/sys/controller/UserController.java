@@ -4,6 +4,7 @@ import com.gxzygygs.iom.common.strategy.Delete;
 import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserRegisterDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.entity.Vo.UserVo;
 import com.gxzygygs.iom.response.Result;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.security.auth.login.AccountException;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +48,8 @@ public class UserController extends AbstractController{
     IUserService userService;
     @ApiOperation("用户注册接口")
     @PostMapping
-    public Result register(@RequestBody @Validated(Insert.class) User user, @RequestBody @NotBlank List<Integer> roleIds) throws AccountException {
-        userService.userRegister(user,roleIds);
+    public Result register(@RequestBody @Validated(Insert.class) UserRegisterDto userRegisterDto) throws AccountException {
+        userService.userRegister(userRegisterDto.getUser(),userRegisterDto.getRoleIds());
         return Result.ok("注册成功");
     }
 
@@ -81,10 +83,8 @@ public class UserController extends AbstractController{
     @ApiOperation("用户删除接口")
     @PostMapping("/remove")
     @RequiresPermissions("sys:user:remove")
-    public Result remove(@RequestBody @Validated(Delete.class) List<User> users) throws AccountException {
-        for (User user : users) {
-            userService.userDelete(user);
-        }
-      return Result.ok();
+    public Result remove(@RequestBody @Validated(Delete.class) User user) throws AccountException {
+        userService.userDelete(user);
+        return Result.ok();
     };
 }
