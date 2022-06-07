@@ -3,6 +3,8 @@ package com.gxzygygs.iom.exceptions;
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
 import com.gxzygygs.iom.response.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.authz.AuthorizationException;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -53,7 +55,21 @@ public class ExceptionsHandler {
      * @return 错误信息
      */
     @ExceptionHandler(AccountException.class)
-    public Result AuthorizedExceptionHandler(AccountException exception) {
+    public Result AccountExceptionHandler(AccountException exception) {
+        log.error(exception.getMessage());
+        return new Result().error(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
+    }
+
+
+
+    /**
+     * AuthorizationException校验错误拦截处理
+     *
+     * @param exception 错误信息集合
+     * @return 错误信息
+     */
+    @ExceptionHandler(AuthorizationException.class)
+    public Result AuthorizedExceptionHandler(AuthorizationException exception) {
         log.error(exception.getMessage());
         return new Result().error(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
     }
