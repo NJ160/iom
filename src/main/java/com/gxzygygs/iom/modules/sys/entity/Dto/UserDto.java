@@ -10,7 +10,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
-public class UserRegisterDto {
+public class UserDto {
     @Valid
     private User user;
 

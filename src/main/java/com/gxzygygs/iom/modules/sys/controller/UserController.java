@@ -4,31 +4,22 @@ import com.gxzygygs.iom.common.strategy.Delete;
 import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
-import com.gxzygygs.iom.modules.sys.entity.Dto.UserRegisterDto;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.entity.Vo.UserVo;
 import com.gxzygygs.iom.response.Result;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import jdk.net.SocketFlow;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
-import org.apache.shiro.subject.Subject;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.stereotype.Controller;
 
 import javax.security.auth.login.AccountException;
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -48,7 +39,7 @@ public class UserController extends AbstractController{
     IUserService userService;
     @ApiOperation("用户注册接口")
     @PostMapping
-    public Result register(@RequestBody @Validated(Insert.class) UserRegisterDto userRegisterDto) throws AccountException {
+    public Result register(@RequestBody @Validated(Insert.class) UserDto userRegisterDto) throws AccountException {
         userService.userRegister(userRegisterDto.getUser(),userRegisterDto.getRoleIds());
         return Result.ok("注册成功");
     }

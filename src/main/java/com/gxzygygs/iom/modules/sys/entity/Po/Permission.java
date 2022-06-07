@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * <p>
@@ -28,17 +29,17 @@ public class Permission implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @ApiModelProperty("ID")
-    @NotBlank(message = "权限Id不能为空",groups = {Select.class, Delete.class, Update.class})
+    @NotNull(message = "权限Id不能为空",groups = {Select.class, Delete.class, Update.class})
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     @ApiModelProperty("资源名称")
-    @NotBlank(message = "权限名称不能为空",groups = {Insert.class})
+    @NotBlank(message = "权限名称不能为空",groups = {Insert.class, Update.class})
     @TableField("`name`")
     private String name;
 
     @ApiModelProperty("权限代码字符串")
-    @NotBlank(message = "权限代码不能为空",groups = {Insert.class})
+    @NotBlank(message = "权限代码不能为空",groups = {Insert.class, Update.class})
     private String perCode;
 
     public Integer getId() {

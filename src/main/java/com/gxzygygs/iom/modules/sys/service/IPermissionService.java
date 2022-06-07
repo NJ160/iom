@@ -20,6 +20,8 @@ public interface IPermissionService extends IService<Permission> {
 
     Permission findPermissionById(Permission permission);
 
+    Permission findPermissionByPerCode(Permission permission);
+
     List<Permission> listAllPermission();
 
     //选出对应角色的所有权限

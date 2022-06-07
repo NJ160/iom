@@ -18,6 +18,8 @@ public interface IRoleService extends IService<Role> {
 
     Role findRoleById(Role role);
 
+    Role findRoleByName(Role role);
+
     List<Role> listAllRoles();
 
     List<Role> listRolesByUser(User user);
@@ -29,4 +31,5 @@ public interface IRoleService extends IService<Role> {
     void deleteRolesForUser(User user,List<Integer> roleIds);
 
     void removeRole(Role role);
+
 }

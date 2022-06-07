@@ -45,6 +45,26 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
     IPermissionService iPermissionService;
 
     @Override
+    public Role findRoleById(Role role) {
+        role = getById(role);
+        if(role==null){
+            throw new AccountException("角色不存在");
+        }
+        return role;
+    }
+
+    @Override
+    public Role findRoleByName(Role role) {
+        return roleMapper.selectOne(new LambdaQueryWrapper<Role>().eq(Role::getName,role.getName()));
+    }
+
+    @Override
+    public List<Role> listAllRoles() {
+        List<Role> userRolePos = roleMapper.selectList(new QueryWrapper<Role>());
+        return userRolePos;
+    }
+
+    @Override
     public List<Role> listRolesByUser(User user) {
         //选出所有和用户相关的角色关系
         List<UserRole> userRolePos = userRoleMapper.selectList(new LambdaQueryWrapper<UserRole>().in(UserRole::getUserId,user.getId()));
@@ -55,20 +75,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         return roles;
     }
 
-    @Override
-    public Role findRoleById(Role role) {
-        role = getById(role);
-        if(role==null){
-            throw new AccountException("角色不存在");
-        }
-        return role;
-    }
-
-    @Override
-    public List<Role> listAllRoles() {
-        List<Role> userRolePos = roleMapper.selectList(new QueryWrapper<Role>());
-        return userRolePos;
-    }
 
     @Override
     public void updateRolesForUser(User user, List<Integer> roleIds) {
@@ -80,11 +86,11 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
         //获得两者的交集角色Id
         List<Integer> bothRoleIds = dbRoleIds.stream().filter(id -> roleIds.contains(id)).collect(Collectors.toList());
         //获得新增的角色Id
-        List<Integer> insertRoleIds = dbRoleIds.stream().filter(id -> bothRoleIds.contains(id)).collect(Collectors.toList());
+        List<Integer> insertRoleIds = roleIds.stream().filter(id -> !bothRoleIds.contains(id)).collect(Collectors.toList());
         //新增用户角色
         insertRolesForUser(user,insertRoleIds);
         //获得删除的角色Id
-        List<Integer> deleteRoleIds = roleIds.stream().filter(id -> bothRoleIds.contains(id)).collect(Collectors.toList());
+        List<Integer> deleteRoleIds = dbRoleIds.stream().filter(id -> !bothRoleIds.contains(id)).collect(Collectors.toList());
         //删除用户角色
         deleteRolesForUser(user,deleteRoleIds);
     }
@@ -144,6 +150,8 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements IR
             throw new AccountException("删除角色表失败,RoleId:"+role.getId()+"RoleName:"+role.getName());
         }
     }
+
+
 
 
 }

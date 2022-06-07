@@ -45,6 +45,11 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
     }
 
     @Override
+    public Permission findPermissionByPerCode(Permission permission) {
+        return permissionMapper.selectOne(new LambdaQueryWrapper<Permission>().eq(Permission::getPerCode,permission.getPerCode()));
+    }
+
+    @Override
     public List<Permission> listAllPermission() {
         List<Permission> permissions = permissionMapper.selectList(new QueryWrapper<Permission>());
         return permissions;
@@ -79,11 +84,11 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
         //获得两者的交集权限Id
         List<Integer> bothPermissionIds = dbPermissionIds.stream().filter(id -> permissionIds.contains(id)).collect(Collectors.toList());
         //获得新增的权限Id
-        List<Integer> insertPermissionIds = dbPermissionIds.stream().filter(id -> bothPermissionIds.contains(id)).collect(Collectors.toList());
+        List<Integer> insertPermissionIds = permissionIds.stream().filter(id -> !bothPermissionIds.contains(id)).collect(Collectors.toList());
         //新增角色权限
         insertPermissionsForRole(role,insertPermissionIds);
         //获得删除的权限Id
-        List<Integer> deletePermissionIds = permissionIds.stream().filter(id -> bothPermissionIds.contains(id)).collect(Collectors.toList());
+        List<Integer> deletePermissionIds = dbPermissionIds.stream().filter(id -> !bothPermissionIds.contains(id)).collect(Collectors.toList());
         //删除角色权限
         deletePermissionsForRole(role,deletePermissionIds);
     }

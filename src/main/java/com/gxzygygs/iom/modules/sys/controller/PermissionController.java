@@ -5,6 +5,7 @@ import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
+import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Permission;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
@@ -17,10 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.validation.constraints.NotBlank;
@@ -37,6 +35,7 @@ import java.util.stream.Collectors;
  */
 @Controller
 @RequestMapping("/sys/permission")
+@ResponseBody
 @Slf4j
 public class PermissionController extends AbstractController{
 
@@ -49,7 +48,7 @@ public class PermissionController extends AbstractController{
 
 
     /**
-     * 所有角色列表
+     * 所有权限列表
      */
     @ApiOperation("获取权限信息接口")
     @GetMapping("/listAll")
@@ -59,7 +58,7 @@ public class PermissionController extends AbstractController{
     }
 
     /**
-     * 获取用户角色信息接口
+     * 获取角色权限信息接口
      */
     @ApiOperation("获取角色权限信息接口")
     @PostMapping("/listByRole")
@@ -101,6 +100,11 @@ public class PermissionController extends AbstractController{
     @PostMapping("/add")
     @RequiresPermissions("sys:permission:add")
     public Result add(@RequestBody @Validated(Insert.class) Permission permission){
+        //判断权限是否存在
+        if(permissionService.findPermissionByPerCode(permission)!=null){
+            throw new AccountException("权限信息新增失败，"+permission.getPerCode()+"已存在。");
+        }
+        //存
         if(!permissionService.save(permission)){
             throw new AccountException("权限信息新增失败");
         }
@@ -124,10 +128,9 @@ public class PermissionController extends AbstractController{
     @ApiOperation("更新角色权限信息接口")
     @PostMapping("/updateByRole")
     @RequiresPermissions("sys:permission:update")
-    public Result updateByRole(@RequestBody @Validated(Select.class) Role role, @RequestBody @NotBlank List<Integer> permissionIds){
+    public Result updateByRole(@RequestBody @Validated(Select.class)RoleDto roleDto){
         //获得数据库内的user对象
-        role = roleService.findRoleById(role);
-        permissionService.updatePermissionsForRole(role,permissionIds);
-        return Result.ok();
+        permissionService.updatePermissionsForRole(roleService.findRoleById(roleDto.getRole()),roleDto.getPermissionIds());
+        return Result.ok("更新成功");
     }
 }

@@ -5,8 +5,11 @@ import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
+import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
+import com.gxzygygs.iom.modules.sys.service.IPermissionService;
 import com.gxzygygs.iom.modules.sys.service.IRoleService;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
 import com.gxzygygs.iom.response.Result;
@@ -14,11 +17,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.validation.constraints.NotBlank;
@@ -34,6 +35,7 @@ import java.util.List;
  */
 @Controller
 @RequestMapping("/sys/role")
+@ResponseBody
 @Slf4j
 public class RoleController extends AbstractController {
 
@@ -41,6 +43,8 @@ public class RoleController extends AbstractController {
     IRoleService roleService;
     @Autowired
     IUserService userService;
+    @Autowired
+    IPermissionService permissionService;
 
     /**
      * 所有角色列表
@@ -70,10 +74,17 @@ public class RoleController extends AbstractController {
     @ApiOperation("新增角色信息接口")
     @PostMapping("/add")
     @RequiresPermissions("sys:role:add")
-    public Result add(@RequestBody @Validated(Insert.class) Role role){
-        if(!roleService.save(role)){
+    public Result add(@RequestBody @Validated(Insert.class) RoleDto roleDto){
+        //判断角色是否存在
+        if(roleService.findRoleByName(roleDto.getRole())!=null){
+            throw new AccountException("角色信息新增失败，"+roleDto.getRole().getName()+"已存在。");
+        }
+        //存储角色信息
+        if(!roleService.save(roleDto.getRole())){
             throw new AccountException("角色信息新增失败");
         }
+        //插入权限信息
+        permissionService.insertPermissionsForRole(roleService.findRoleByName(roleDto.getRole()),roleDto.getPermissionIds());
         return Result.ok("新增成功");
     }
 
@@ -107,11 +118,10 @@ public class RoleController extends AbstractController {
     @ApiOperation("更新用户角色信息接口")
     @PostMapping("/updateByUser")
     @RequiresPermissions("sys:role:update")
-    public Result updateByUser(@RequestBody @Validated(Select.class) User user, @RequestBody @NotBlank List<Integer> roleIds){
+    public Result updateByUser(@RequestBody @Validated(Select.class) UserDto userDto){
         //获得数据库内的user对象
-        user = userService.findUserByAccount(user);
-        roleService.updateRolesForUser(user,roleIds);
-        return Result.ok();
+        roleService.updateRolesForUser(userService.findUserByAccount(userDto.getUser()),userDto.getRoleIds());
+        return Result.ok("更新成功");
     }
 
 

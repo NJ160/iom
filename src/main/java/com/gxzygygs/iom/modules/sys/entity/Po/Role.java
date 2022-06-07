@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * <p>
@@ -26,12 +27,12 @@ public class Role implements Serializable {
 
     @ApiModelProperty("ID")
     @TableId(value = "id", type = IdType.AUTO)
-    @NotBlank(message = "角色Id不能为空",groups = {Select.class, Delete.class, Update.class})
+    @NotNull(message = "角色Id不能为空",groups = {Select.class, Delete.class, Update.class})
     private Integer id;
 
     @ApiModelProperty("角色名称")
     @TableField("`name`")
-    @NotBlank(message = "角色名称不能为空",groups = {Insert.class})
+    @NotBlank(message = "角色名称不能为空",groups = {Insert.class, Update.class})
     private String name;
 
     public Integer getId() {

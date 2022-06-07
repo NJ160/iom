@@ -19,7 +19,7 @@ public class IomApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(IomApplication.class, args);
-        new SimpleServer(new InetSocketAddress("localhost", 8887)).run();
+//        new SimpleServer(new InetSocketAddress("localhost", 8887)).run();
     }
 
 }
