@@ -1,10 +1,11 @@
 package com.gxzygygs.iom.exceptions;
 
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
+import com.gxzygygs.iom.exceptions.customExceptions.UtilsException;
+import com.gxzygygs.iom.exceptions.customExceptions.PromException;
 import com.gxzygygs.iom.response.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.AuthorizationException;
-import org.apache.shiro.authz.UnauthorizedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -38,13 +39,9 @@ public class ExceptionsHandler {
                             "},错误信息{" + fieldError.getDefaultMessage() + "}");
                     message.append(fieldError.getDefaultMessage()+"; ");
                 });
-//                if (errors.size() > 0) {
-//                    FieldError fieldError = (FieldError) errors.get(0);
-//                    message = fieldError.getDefaultMessage();
-//                }
             }
         }
-        return new Result().error(HttpStatus.BAD_REQUEST.value(), message.toString());
+        return new Result().error(HttpStatus.BAD_REQUEST.value(), "(Validate错误： "+message.toString()+")");
     }
 
 
@@ -57,10 +54,8 @@ public class ExceptionsHandler {
     @ExceptionHandler(AccountException.class)
     public Result AccountExceptionHandler(AccountException exception) {
         log.error(exception.getMessage());
-        return new Result().error(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
+        return new Result().error(HttpStatus.BAD_REQUEST.value(), "(Account错误： "+exception.getMessage()+")");
     }
-
-
 
     /**
      * AuthorizationException校验错误拦截处理
@@ -71,6 +66,31 @@ public class ExceptionsHandler {
     @ExceptionHandler(AuthorizationException.class)
     public Result AuthorizedExceptionHandler(AuthorizationException exception) {
         log.error(exception.getMessage());
-        return new Result().error(HttpStatus.BAD_REQUEST.value(), exception.getMessage());
+        return new Result().error(HttpStatus.BAD_REQUEST.value(), "(Authorization错误： "+exception.getMessage()+")");
+    }
+
+    /**
+     * PromException 普罗米修斯脚本执行错误拦截处理
+     *
+     * @param exception 错误信息集合
+     * @return 错误信息
+     */
+    @ExceptionHandler(PromException.class)
+    public Result PromExceptionHandler(PromException exception) {
+        log.error(exception.getMessage());
+        return new Result().error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "(普罗米修斯错误： "+exception.getMessage()+")");
+    }
+
+    /**
+     * Util 工具类错误拦截处理
+     *
+     * @param exception 错误信息集合
+     * @return 错误信息
+     */
+    @ExceptionHandler(UtilsException.class)
+    public Result CustomExceptionHandler(UtilsException exception) {
+        log.error(exception.getMessage());
+        return new Result().error(HttpStatus.INTERNAL_SERVER_ERROR.value(), "(Utils工具类错误： "+exception.getMessage()+")");
     }
 }
+

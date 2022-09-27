@@ -5,7 +5,9 @@ import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
+import com.gxzygygs.iom.modules.sys.entity.Dto.PermissionDto;
 import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Permission;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
@@ -63,8 +65,8 @@ public class PermissionController extends AbstractController{
     @ApiOperation("获取角色权限信息接口")
     @PostMapping("/listByRole")
     @RequiresPermissions("sys:permission:view")
-    public Result listByRole(@RequestBody @Validated(Select.class) Role role){
-        role = roleService.findRoleById(role);
+    public Result listByRole(@RequestBody @Validated(Select.class) RoleDto role){
+        Role rolePo = roleService.findRoleById(role);
         return Result.ok().put("permissions",permissionService.listPermissionsByRole(role));
     }
 
@@ -74,10 +76,10 @@ public class PermissionController extends AbstractController{
     @ApiOperation("根据用户获得角色权限信息接口")
     @PostMapping("/listByUser")
     @RequiresPermissions("sys:permission:view")
-    public Result listByUser(@RequestBody @Validated(Select.class) User user){
-        user = userService.findUserByAccount(user);
+    public Result listByUser(@RequestBody @Validated(Select.class) UserDto user){
+        user = userService.findUserByUsername(user);
         List roles = roleService.listRolesByUser(user);
-        return Result.ok().put("rolePermissionMap",permissionService.listPermissionsByRoles(roles));
+        return Result.ok().put("rolePermissionMap",permissionService.mapPermissionsByRoles(roles));
     }
 
     /**
@@ -86,7 +88,7 @@ public class PermissionController extends AbstractController{
     @ApiOperation("更新权限信息接口")
     @PostMapping("/update")
     @RequiresPermissions("sys:permission:update")
-    public Result update(@RequestBody @Validated(Update.class) Permission permission){
+    public Result update(@RequestBody @Validated(Update.class) PermissionDto permission){
         if(!permissionService.updateById(permission)){
             throw new AccountException("权限信息更新失败");
         }
@@ -99,9 +101,9 @@ public class PermissionController extends AbstractController{
     @ApiOperation("新增权限信息接口")
     @PostMapping("/add")
     @RequiresPermissions("sys:permission:add")
-    public Result add(@RequestBody @Validated(Insert.class) Permission permission){
+    public Result add(@RequestBody @Validated(Insert.class) PermissionDto permission){
         //判断权限是否存在
-        if(permissionService.findPermissionByPerCode(permission)!=null){
+        if(permissionService.checkIfPermissionExist(permission)){
             throw new AccountException("权限信息新增失败，"+permission.getPerCode()+"已存在。");
         }
         //存
@@ -117,20 +119,22 @@ public class PermissionController extends AbstractController{
     @ApiOperation("删除权限信息接口")
     @PostMapping("/remove")
     @RequiresPermissions("sys:permission:remove")
-    public Result remove(@RequestBody @Validated(Delete.class) Permission permission){
+    public Result remove(@RequestBody @Validated(Delete.class) PermissionDto permission){
         permissionService.RemovePermission(permission);
         return Result.ok("删除成功");
     }
 
-    /**
-     * 更新用户角色信息接口
-     */
-    @ApiOperation("更新角色权限信息接口")
-    @PostMapping("/updateByRole")
-    @RequiresPermissions("sys:permission:update")
-    public Result updateByRole(@RequestBody @Validated(Select.class)RoleDto roleDto){
-        //获得数据库内的user对象
-        permissionService.updatePermissionsForRole(roleService.findRoleById(roleDto.getRole()),roleDto.getPermissionIds());
-        return Result.ok("更新成功");
-    }
+//    /**
+//     * 更新用户角色信息接口
+//     */
+//    @ApiOperation("更新角色权限信息接口")
+//    @PostMapping("/updateByRole")
+//    @RequiresPermissions("sys:permission:update")
+//    public Result updateByRole(@RequestBody @Validated(Update.class)RoleDto roleDto){
+//        RoleDto role = roleService.findRoleById(roleDto);
+//        roleDto.setPermissionIds(roleDto.getPermissionIds());
+//        //获得数据库内的user对象
+//        permissionService.updatePermissionsForRole(role);
+//        return Result.ok("更新成功");
+//    }
 }

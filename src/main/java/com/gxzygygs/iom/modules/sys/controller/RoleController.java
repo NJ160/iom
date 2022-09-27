@@ -8,7 +8,6 @@ import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
 import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
 import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
-import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.service.IPermissionService;
 import com.gxzygygs.iom.modules.sys.service.IRoleService;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
@@ -16,8 +15,8 @@ import com.gxzygygs.iom.response.Result;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
@@ -62,9 +61,9 @@ public class RoleController extends AbstractController {
     @ApiOperation("获取用户角色信息接口")
     @PostMapping("/listByUser")
     @RequiresPermissions("sys:role:view")
-    public Result listByUser(@RequestBody @Validated(Select.class) User user){
+    public Result listByUser(@RequestBody @Validated(Select.class) UserDto user){
         //获得数据库内的user对象
-        user = userService.findUserByAccount(user);
+        user = userService.findUserByUsername(user);
         return Result.ok().put("roles",roleService.listRolesByUser(user));
     }
 
@@ -76,15 +75,15 @@ public class RoleController extends AbstractController {
     @RequiresPermissions("sys:role:add")
     public Result add(@RequestBody @Validated(Insert.class) RoleDto roleDto){
         //判断角色是否存在
-        if(roleService.findRoleByName(roleDto.getRole())!=null){
-            throw new AccountException("角色信息新增失败，"+roleDto.getRole().getName()+"已存在。");
+        if(roleService.checkRoleExistByName(roleDto)){
+            throw new AccountException("角色信息新增失败，"+roleDto.getName()+"已存在。");
         }
         //存储角色信息
-        if(!roleService.save(roleDto.getRole())){
+        if(!roleService.save(roleDto)){
             throw new AccountException("角色信息新增失败");
         }
         //插入权限信息
-        permissionService.insertPermissionsForRole(roleService.findRoleByName(roleDto.getRole()),roleDto.getPermissionIds());
+        permissionService.insertPermissionsForRole(roleDto);
         return Result.ok("新增成功");
     }
 
@@ -94,7 +93,7 @@ public class RoleController extends AbstractController {
     @ApiOperation("删除角色信息接口")
     @PostMapping("/remove")
     @RequiresPermissions("sys:role:remove")
-    public Result remove(@RequestBody @Validated(Delete.class) Role role){
+    public Result remove(@RequestBody @Validated(Delete.class) RoleDto role){
         roleService.removeRole(role);
         return Result.ok("删除成功");
     }
@@ -105,10 +104,14 @@ public class RoleController extends AbstractController {
     @ApiOperation("更新角色信息接口")
     @PostMapping("/update")
     @RequiresPermissions("sys:role:update")
-    public Result update(@RequestBody @Validated(Update.class) Role role){
-        if(!roleService.updateById(role)){
+    public Result update(@RequestBody @Validated(Update.class) RoleDto role){
+        Role rolePo = new Role();
+        BeanUtils.copyProperties(role,rolePo);
+        if(!roleService.updateById(rolePo)){
             throw new AccountException("角色信息更新失败");
         }
+        //获得数据库内的user对象
+        permissionService.updatePermissionsForRole(role);
         return Result.ok("更新成功");
     }
 
@@ -118,9 +121,12 @@ public class RoleController extends AbstractController {
     @ApiOperation("更新用户角色信息接口")
     @PostMapping("/updateByUser")
     @RequiresPermissions("sys:role:update")
-    public Result updateByUser(@RequestBody @Validated(Select.class) UserDto userDto){
+    public Result updateByUser(@RequestBody @Validated(Update.class) UserDto userDto){
         //获得数据库内的user对象
-        roleService.updateRolesForUser(userService.findUserByAccount(userDto.getUser()),userDto.getRoleIds());
+        UserDto user = userService.findUserByUsername(userDto);
+        user.setRoleIds(userDto.getRoleIds());
+
+        roleService.updateRolesForUser(user);
         return Result.ok("更新成功");
     }
 

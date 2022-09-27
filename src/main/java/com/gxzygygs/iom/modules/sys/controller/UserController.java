@@ -4,11 +4,18 @@ import com.gxzygygs.iom.common.strategy.Delete;
 import com.gxzygygs.iom.common.strategy.Insert;
 import com.gxzygygs.iom.common.strategy.Select;
 import com.gxzygygs.iom.common.strategy.Update;
+import com.gxzygygs.iom.constant.Constant;
+import com.gxzygygs.iom.jwt.JwtToken;
+import com.gxzygygs.iom.modules.sys.entity.Dto.JwtUser;
 import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
+import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.entity.Vo.UserVo;
+import com.gxzygygs.iom.modules.sys.service.IPermissionService;
+import com.gxzygygs.iom.modules.sys.service.IRoleService;
 import com.gxzygygs.iom.response.Result;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
+import com.gxzygygs.iom.utils.JwtUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.login.AccountException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -32,41 +41,49 @@ import java.util.HashMap;
 @RestController
 @RequestMapping("/sys/user")
 @Slf4j
+@ResponseBody
 @Api(tags = "用户控制类")
 public class UserController extends AbstractController{
 
     @Autowired
     IUserService userService;
+    @Autowired
+    IRoleService roleService;
+    @Autowired
+    IPermissionService permissionService;
+
     @ApiOperation("用户注册接口")
     @PostMapping
-    public Result register(@RequestBody @Validated(Insert.class) UserDto userRegisterDto) throws AccountException {
-        userService.userRegister(userRegisterDto.getUser(),userRegisterDto.getRoleIds());
+    public Result register(@RequestBody @Validated(Insert.class) UserDto user) throws AccountException {
+        userService.userRegister(user);
         return Result.ok("注册成功");
     }
 
     @ApiOperation("用户详细信息接口")
     @GetMapping("/detail")
     @RequiresPermissions("sys:user:view")
-    public Result infoDetail(@RequestBody @Validated(Select.class) User user){
+    public Result infoDetail() throws AccountException {
 
-        return Result.ok(new HashMap<>());
+        UserDto userDto = new UserDto();
+        userDto.setUsername(getUsername());
+        userDto = userService.userSummaryInfo(userDto);
+        UserVo userVo = new UserVo();
+        BeanUtils.copyProperties(userDto,userVo);
+
+        return Result.ok().put("user",userVo);
     }
 
     @ApiOperation("用户基础信息接口")
-    @GetMapping
+    @GetMapping("/info")
     @RequiresPermissions("sys:user:view")
     public Result infoSummary(){
-        User user = getUser();
-        UserVo userVo = new UserVo();
-        BeanUtils.copyProperties(user,userVo);
-
-        return new Result().put("userInfo",userVo);
+        return Result.ok().put("name",getUsername());
     }
 
     @ApiOperation("用户更新接口")
     @PostMapping ("/update")
     @RequiresPermissions("sys:user:update")
-    public Result update(@RequestBody @Validated(Update.class) User user) throws AccountException {
+    public Result update(@RequestBody @Validated(Update.class) UserDto user) throws AccountException {
         userService.userInfoUpdate(user);
         return Result.ok();
     }
@@ -74,7 +91,7 @@ public class UserController extends AbstractController{
     @ApiOperation("用户删除接口")
     @PostMapping("/remove")
     @RequiresPermissions("sys:user:remove")
-    public Result remove(@RequestBody @Validated(Delete.class) User user) throws AccountException {
+    public Result remove(@RequestBody @Validated(Delete.class) UserDto user) throws AccountException {
         userService.userDelete(user);
         return Result.ok();
     };

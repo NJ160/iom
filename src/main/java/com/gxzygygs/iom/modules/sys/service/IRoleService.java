@@ -1,5 +1,7 @@
 package com.gxzygygs.iom.modules.sys.service;
 
+import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
@@ -16,20 +18,22 @@ import java.util.List;
  */
 public interface IRoleService extends IService<Role> {
 
-    Role findRoleById(Role role);
+    RoleDto findRoleById(RoleDto role);
 
-    Role findRoleByName(Role role);
+    RoleDto findRoleByName(RoleDto role);
+
+    boolean checkRoleExistByName(RoleDto role);
 
     List<Role> listAllRoles();
 
-    List<Role> listRolesByUser(User user);
+    List<Role> listRolesByUser(UserDto user);
 
-    void updateRolesForUser(User user,List<Integer> roleIds);
+    void updateRolesForUser(UserDto user);
 
-    void insertRolesForUser(User user,List<Integer> roleIds);
+    void insertRolesForUser(UserDto user);
 
-    void deleteRolesForUser(User user,List<Integer> roleIds);
+    void deleteRolesForUser(UserDto user);
 
-    void removeRole(Role role);
+    void removeRole(RoleDto role);
 
 }

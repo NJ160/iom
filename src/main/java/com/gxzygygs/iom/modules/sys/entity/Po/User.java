@@ -33,9 +33,9 @@ public class User implements Serializable {
     private Integer id;
 
     @ApiModelProperty("帐号")
-    @TableField("`account`")
+    @TableField("`username`")
     @NotBlank(message = "用户名不能为空",groups = {Select.class,Delete.class,Update.class,Insert.class,Auth.class})
-    private String account;
+    private String username;
 
     @ApiModelProperty("密码")
     @TableField("`password`")
@@ -44,7 +44,7 @@ public class User implements Serializable {
 
     @ApiModelProperty("昵称")
     @NotBlank(message = "注册昵称不能为空",groups = Insert.class)
-    private String username;
+    private String account;
 
     @ApiModelProperty("注册时间")
     private Date regTime;
@@ -59,5 +59,12 @@ public class User implements Serializable {
     @Pattern(regexp = "1[3456789]\\d{9}",message = "手机号格式不对",groups = {Insert.class})
     @ApiModelProperty("手机")
     private String telephone;
+
+    @NotBlank(message = "部门不能为空",groups = Insert.class)
+    @ApiModelProperty("部门")
+    private String department;
+
+    @ApiModelProperty("逻辑删除")
+    private boolean isDisabled;
 
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.gxzygygs.iom.exceptions.customExceptions.AccountException;
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.gxzygygs.iom.modules.sys.mapper.UserMapper;
@@ -11,6 +12,7 @@ import com.gxzygygs.iom.modules.sys.service.IRoleService;
 import com.gxzygygs.iom.modules.sys.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gxzygygs.iom.utils.AesCipherUtil;
+import com.gxzygygs.iom.utils.common.PropertiesUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,107 +43,111 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     IRoleService roleService;
 
     @Override
-    public User findUserByAccount(User user){
-        User userPo = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getAccount, user.getAccount()).last("LIMIT 1"));
+    public UserDto findUserByUsername(UserDto user){
+        User userPo = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, user.getUsername()).last("LIMIT 1"));
         if(userPo==null){
-            throw new AccountException("用户{"+ user.getAccount() +"}不存在");
+            throw new AccountException("用户{"+ user.getUsername() +"}不存在");
         }
-        return userPo;
+        UserDto userDto = new UserDto();
+        BeanUtils.copyProperties(userPo,userDto);
+        return userDto;
     }
 
     @Override
-    public boolean checkIfAccountExist(User user) {
-        User userPo = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getAccount, user.getAccount()).last("LIMIT 1"));
+    public boolean checkIfUserNameExist(UserDto user) {
+        User userPo = userMapper.selectOne(new LambdaQueryWrapper<User>().eq(User::getUsername, user.getUsername()).last("LIMIT 1"));
         if(userPo != null){
-            throw new AccountException("用户{"+ user.getAccount() +"}已存在");
+            throw new AccountException("用户{"+ user.getUsername() +"}已存在");
         }
         return true;
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public User userRegister(User user, List<Integer> roleIds) throws AccountException {
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
+    public UserDto userRegister(UserDto user) throws AccountException {
 
         //判断用户账户是否已存在
-        checkIfAccountExist(user);
-        //初始化持久层用户对象
-        User userPo = new User();
-        BeanUtils.copyProperties(user,userPo);
-        String password = AesCipherUtil.enCrypto(user.getPassword());
+        checkIfUserNameExist(user);
+        String password = AesCipherUtil.enCrypto(user.getUsername()+user.getPassword());
         user.setPassword(password);
         user.setRegTime(new Date());
         //插入用户表
         int i = userMapper.insert(user);
         if(i==0){
-            throw new AccountException("用户{"+ user.getAccount() +"}注册失败,插入数据库失败");
+            throw new AccountException("用户{"+ user.getUsername() +"}注册失败,插入数据库失败");
         }
         //获得数据库内带ID的用户对象
-        userPo = findUserByAccount(userPo);
+        User userPo = new User();
+        userPo = findUserByUsername(user);
+        BeanUtils.copyProperties(user,userPo);
         //插入用户角色表
-        roleService.insertRolesForUser(userPo,roleIds);
+        roleService.insertRolesForUser(user);
 
         return user;
     }
 
     @Override
-    public User userSummaryInfo(User user) throws AccountException {
-        User userPo = findUserByAccount(user);
-        return userPo;
+    public UserDto userSummaryInfo(UserDto user) throws AccountException {
+        UserDto userDto = findUserByUsername(user);
+        return userDto;
     }
 
     @Override
-    public User userDetailInfo(User user) throws AccountException {
-        User userPo = findUserByAccount(user);
-        return userPo;
+    public UserDto userDetailInfo(UserDto user) throws AccountException {
+        UserDto userDto = findUserByUsername(user);
+        return userDto;
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public boolean userInfoUpdate(User user) throws AccountException {
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
+    public boolean userInfoUpdate(UserDto user) throws AccountException {
         //查询服务器内数据
         User userPo = userSummaryInfo(user);
         if(userPo==null){
-            throw new AccountException("更新用户"+user.getAccount()+"失败,用户不存在");
+            throw new AccountException("更新用户"+user.getUsername()+"失败,用户不存在");
         }
 
         if(StringUtils.isBlank(user.getPassword())){
             user.setPassword(null);
         }else{
-            user.setPassword(AesCipherUtil.enCrypto(user.getAccount()));
+            user.setPassword(AesCipherUtil.enCrypto(user.getUsername()+user.getPassword()));
         }
 
         //通过ID修改信息
         int i = userMapper.update(null,new LambdaUpdateWrapper<User>().set(StringUtils.isNotBlank(user.getPassword()),User::getPassword,user.getPassword())
                                                             .set(StringUtils.isNotBlank(user.getEmail()),User::getEmail,user.getEmail())
                                                             .set(StringUtils.isNotBlank(user.getTelephone()),User::getTelephone,user.getTelephone())
-                                                            .set(StringUtils.isNotBlank(user.getUsername()),User::getUsername,user.getUsername())
-                                                            //设置Account防止用户传了一个空的东西导致sql没有set
                                                             .set(StringUtils.isNotBlank(user.getAccount()),User::getAccount,user.getAccount())
+                                                            .set(StringUtils.isNotBlank(user.getDepartment()),User::getDepartment,user.getDepartment())
+                                                            .set(user.isDisabled(),User::isDisabled,user.isDisabled()?1:0)
+                                                            //设置Username防止用户传了一个空的东西导致sql没有set
+                                                            .set(StringUtils.isNotBlank(user.getUsername()),User::getUsername,user.getUsername())
                                                             .eq(userPo.getId()!=null,User::getId,userPo.getId()));
-        log.info("用户:"+user.getAccount()+"基础资料更新{"+i+"}条数据");
+        log.info("用户:"+user.getUsername()+"基础资料更新{"+i+"}条数据");
         if(i == 0){
-            throw new AccountException("更新用户"+user.getAccount()+"数据失败");
+            throw new AccountException("更新用户"+user.getUsername()+"数据失败");
         }
         return i!=0;
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED)
-    public boolean userDelete(User user) throws AccountException {
+    @Transactional(propagation = Propagation.REQUIRED,rollbackFor = Exception.class)
+    public boolean userDelete(UserDto user) throws AccountException {
         //查询服务器内数据
         User userPo = userSummaryInfo(user);
         if(userPo==null){
-            throw new AccountException("删除用户"+user.getAccount()+"失败,用户不存在");
+            throw new AccountException("删除用户"+user.getUsername()+"失败,用户不存在");
         }
-
+        BeanUtils.copyProperties(userPo,user);
         //获得删除用户下的所有角色
-        List<Integer> roleIds = roleService.listRolesByUser(userPo).stream().map(Role::getId).collect(Collectors.toList());
+        List<Integer> roleIds = roleService.listRolesByUser(user).stream().map(Role::getId).collect(Collectors.toList());
+        user.setRoleIds(roleIds);
         //在用户角色表下删除所有相关关系
-        roleService.deleteRolesForUser(userPo,roleIds);
+        roleService.deleteRolesForUser(user);
 
         int i = userMapper.deleteById(userPo);
         if(i == 0){
-            throw new AccountException("删除用户"+user.getAccount()+"数据失败");
+            throw new AccountException("删除用户"+user.getUsername()+"数据失败");
         }
         return i!=0;
     }

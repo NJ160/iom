@@ -6,4 +6,13 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-encryptAESKey: 9999999999999999999999
+# ASE加密Key
+encryptAESKey: V2FuZzkyNjQ1N5QYHGFQSUpXVA==
+# Jwt加密Key
+encryptJWTKey: U0JBUEKV1RkV2FuASDkyNjQ1NA==
+# Token过期时间
+accessTokenExpireTime: 300
+# Token刷新时间
+refreshTokenExpireTime: 1800
+# shiro缓存过期时间
+shiroCacheExpireTime: 300

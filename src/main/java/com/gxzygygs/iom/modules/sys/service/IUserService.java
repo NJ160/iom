@@ -1,5 +1,6 @@
 package com.gxzygygs.iom.modules.sys.service;
 
+import com.gxzygygs.iom.modules.sys.entity.Dto.UserDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -16,17 +17,17 @@ import java.util.List;
  */
 public interface IUserService extends IService<User> {
 
-    User findUserByAccount(User user);
+    UserDto findUserByUsername(UserDto user);
 
-    boolean checkIfAccountExist(User user);
+    boolean checkIfUserNameExist(UserDto user);
 
-    User userRegister(User user, List<Integer> roleIds) throws AccountException;
+    UserDto userRegister(UserDto user) throws AccountException;
 
-    User userSummaryInfo(User user) throws AccountException;
+    UserDto userSummaryInfo(UserDto user) throws AccountException;
 
-    User userDetailInfo(User user) throws AccountException;
+    UserDto userDetailInfo(UserDto user) throws AccountException;
 
-    boolean userInfoUpdate(User user) throws AccountException;
+    boolean userInfoUpdate(UserDto user) throws AccountException;
 
-    boolean userDelete(User user) throws AccountException;
+    boolean userDelete(UserDto user) throws AccountException;
 }

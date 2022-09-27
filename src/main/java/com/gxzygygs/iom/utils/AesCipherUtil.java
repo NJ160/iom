@@ -1,6 +1,6 @@
 package com.gxzygygs.iom.utils;
 
-import com.gxzygygs.iom.exceptions.customExceptions.CustomUnauthorizedException;
+import com.gxzygygs.iom.exceptions.customExceptions.UtilsException;
 import com.gxzygygs.iom.utils.common.Base64ConvertUtil;
 import com.gxzygygs.iom.utils.common.HexConvertUtil;
 import org.slf4j.Logger;
@@ -65,16 +65,16 @@ public class AesCipherUtil {
             return Base64ConvertUtil.encode(HexConvertUtil.parseByte2HexStr(cipherByte));
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             logger.error("getInstance()方法异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("getInstance()方法异常:" + e.getMessage());
+            throw new UtilsException( "getInstance()方法异常:" + e.getMessage());
         } catch (UnsupportedEncodingException e) {
             logger.error("Base64加密异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("Base64加密异常:" + e.getMessage());
+            throw new UtilsException("Base64加密异常:" + e.getMessage());
         } catch (InvalidKeyException e) {
             logger.error("初始化Cipher对象异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("初始化Cipher对象异常:" + e.getMessage());
+            throw new UtilsException("初始化Cipher对象异常:" + e.getMessage());
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             logger.error("加密异常，密钥有误:{}", e.getMessage());
-            throw new CustomUnauthorizedException("加密异常，密钥有误:" + e.getMessage());
+            throw new UtilsException("加密异常，密钥有误:" + e.getMessage());
         }
     }
 
@@ -104,16 +104,16 @@ public class AesCipherUtil {
             return new String(cipherByte);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
             logger.error("getInstance()方法异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("getInstance()方法异常:" + e.getMessage());
+            throw new UtilsException("getInstance()方法异常:" + e.getMessage());
         } catch (UnsupportedEncodingException e) {
             logger.error("Base64解密异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("Base64解密异常:" + e.getMessage());
+            throw new UtilsException("Base64解密异常:" + e.getMessage());
         } catch (InvalidKeyException e) {
             logger.error("初始化Cipher对象异常:{}", e.getMessage());
-            throw new CustomUnauthorizedException("初始化Cipher对象异常:" + e.getMessage());
+            throw new UtilsException("初始化Cipher对象异常:" + e.getMessage());
         } catch (IllegalBlockSizeException | BadPaddingException e) {
             logger.error("解密异常，密钥有误:{}", e.getMessage());
-            throw new CustomUnauthorizedException("解密异常，密钥有误:" + e.getMessage());
+            throw new UtilsException("解密异常，密钥有误:" + e.getMessage());
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.gxzygygs.iom.modules.sys.service;
 
+import com.gxzygygs.iom.modules.sys.entity.Dto.PermissionDto;
+import com.gxzygygs.iom.modules.sys.entity.Dto.RoleDto;
 import com.gxzygygs.iom.modules.sys.entity.Po.Permission;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gxzygygs.iom.modules.sys.entity.Po.Role;
@@ -18,9 +20,9 @@ import java.util.Map;
  */
 public interface IPermissionService extends IService<Permission> {
 
-    Permission findPermissionById(Permission permission);
+    PermissionDto findPermissionById(PermissionDto permission);
 
-    Permission findPermissionByPerCode(Permission permission);
+    boolean checkIfPermissionExist(PermissionDto permission);
 
     List<Permission> listAllPermission();
 
@@ -28,13 +30,16 @@ public interface IPermissionService extends IService<Permission> {
     List<Permission> listPermissionsByRole(Role rolePo);
 
     //选出列表下角色的所有权限
-    Map<Integer,List<Permission>> listPermissionsByRoles(List<Role> rolePos);
+    Map<Integer,List<Permission>> mapPermissionsByRoles(List<Role> rolePos);
 
-    void updatePermissionsForRole(Role role, List<Integer> permissionIds);
+    //选出列表下角色的所有权限
+    List<Permission> listPermissionsByRoles(List<Role> rolePos);
 
-    void insertPermissionsForRole(Role role, List<Integer> permissionIds);
+    void updatePermissionsForRole(RoleDto roleDto);
 
-    void deletePermissionsForRole(Role role, List<Integer> permissionIds);
+    void insertPermissionsForRole(RoleDto roleDto);
 
-    void RemovePermission(Permission permission);
+    void deletePermissionsForRole(RoleDto roleDto);
+
+    void RemovePermission(PermissionDto permission);
 }
